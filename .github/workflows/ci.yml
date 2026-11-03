@@ -1,0 +1,105 @@
+name: ci
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Налаштування з .env.example
+        run: |
+          cp .env.example .env
+          grep -E '^APP_IMG_(SPECTRAL|OASDIFF)=' .env >> "$GITHUB_ENV"
+
+      - name: Збирання
+        run: |
+          dotnet restore App.slnx --locked-mode -p:NuGetAudit=false
+          dotnet build App.slnx --no-restore -c Release
+
+      - name: Тести в пам'яті
+        run: dotnet test tests/App.Tests.InMemory --no-build -c Release
+
+      - name: Тести з контейнером бази
+        run: dotnet test tests/App.Tests.Containers --no-build -c Release
+
+      - name: Документ контракту з коду
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ASPNETCORE_URLS: http://localhost:15100
+          Features__Persistence: memory
+        run: |
+          dotnet run --project src/App.Api -c Release --no-build --no-launch-profile > api.log 2>&1 &
+          api=$!
+          for _ in $(seq 60); do
+            curl -fsS http://localhost:15100/health/live > /dev/null && break
+            sleep 1
+          done
+          curl -fsS http://localhost:15100/openapi/v1.json -o contract/openapi.current.json
+          kill "$api"
+
+      - name: Лінтер контракту
+        run: |
+          docker run --rm -e DO_NOT_TRACK=1 -v "$PWD/contract:/work:ro" "$APP_IMG_SPECTRAL" \
+            lint --ruleset /work/.spectral.yaml /work/openapi.current.json
+
+      - name: Порівняння контрактів
+        run: |
+          docker run --rm -v "$PWD/contract:/specs:ro" "$APP_IMG_OASDIFF" \
+            breaking --fail-on ERR /specs/openapi.baseline.json /specs/openapi.current.json
+
+      - name: Аудит залежностей
+        run: |
+          dotnet package list --project App.slnx --vulnerable --include-transitive \
+            || echo "Звіт не побудовано, рішення ухвалює наступна команда"
+          dotnet restore App.slnx --force --locked-mode
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Образ
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: src/App.Api/Dockerfile
+          load: true
+          push: false
+          tags: app-api:ci
+
+      - name: Образ запускається не від суперкористувача
+        run: |
+          uid=$(docker run --rm --entrypoint id app-api:ci -u)
+          echo "uid=$uid"
+          [ "$uid" != "0" ]
+
+      - name: Вхід у реєстр
+        if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Публікація в реєстр
+        if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/app-api"
+          docker tag app-api:ci "$image:${GITHUB_SHA::12}"
+          docker push "$image:${GITHUB_SHA::12}"
+          echo "Опубліковано: $image:${GITHUB_SHA::12}"

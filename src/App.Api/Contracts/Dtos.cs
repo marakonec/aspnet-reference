@@ -36,27 +36,26 @@ public sealed record ReservationDto(
     IReadOnlyList<ReservationItemDto> Items);
 
 /// <summary>Запит на створення бронювання.</summary>
-/// <param name="CustomerId">Ідентифікатор замовника.</param>
+/// <param name="CustomerId">Ідентифікатор замовника. Обов'язковий для оператора, замовник може його не вказувати.</param>
 /// <param name="Items">Щонайменше одна позиція.</param>
 public sealed record CreateReservationRequest(
-    [property: Required(ErrorMessage = "Потрібен ідентифікатор замовника")]
-    string CustomerId,
+    [property: MinLength(1, ErrorMessage = "Ідентифікатор замовника не може бути порожнім")]
+    string? CustomerId,
     [property: Required]
     [property: MinLength(1, ErrorMessage = "Потрібна щонайменше одна позиція")]
     List<ReservationItemDto> Items);
-
-/// <summary>Запит на видачу приладів за бронюванням (ключова операція).</summary>
-/// <param name="IssuedBy">Хто видає прилади.</param>
-public sealed record IssueRequest(
-    [property: Required(ErrorMessage = "Потрібно вказати, хто видає")]
-    [property: MinLength(2)]
-    string IssuedBy);
 
 /// <summary>Результат видачі.</summary>
 /// <param name="ReservationId">Бронювання, за яким видано.</param>
 /// <param name="Status">Новий стан бронювання.</param>
 /// <param name="IssueRecordId">Створений запис видачі.</param>
 public sealed record IssueResultDto(string ReservationId, string Status, string IssueRecordId);
+
+/// <summary>Нова назва моделі в каталозі.</summary>
+public sealed record RenameModelRequest(
+    [property: Required(ErrorMessage = "Потрібна назва моделі")]
+    [property: StringLength(80, MinimumLength = 2, ErrorMessage = "Назва від 2 до 80 символів")]
+    string Title);
 
 /// <summary>Запит на встановлення примітки. Ідемпотентна операція.</summary>
 /// <param name="Notes">Текст примітки. Порожній рядок очищає її.</param>

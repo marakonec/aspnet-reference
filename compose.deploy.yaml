@@ -1,0 +1,41 @@
+name: app-deploy
+
+services:
+
+  db:
+    image: ${APP_IMG_DB}
+    container_name: app-deploy-db
+    environment:
+      POSTGRES_DB: ${APP_DB_NAME}
+      POSTGRES_USER: ${APP_DB_USER}
+      POSTGRES_PASSWORD: ${APP_DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${APP_DB_USER} -d ${APP_DB_NAME}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  api:
+    image: ${APP_IMG_APP}
+    container_name: app-deploy-api
+    pull_policy: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Default: "Host=db;Port=5432;Database=${APP_DB_NAME};Username=${APP_DB_USER};Password=${APP_DB_PASSWORD}"
+      Features__Persistence: postgres
+      # Сервер ідентичності локальної машини працює за HTTP. Послаблення записано в рядку A02 чекліста OWASP.
+      Auth__RequireHttpsMetadata: "false"
+    ports:
+      - "${APP_PORT_DEPLOY_API}:8080"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "{ printf 'GET /health/ready HTTP/1.0\\r\\n\\r\\n' >&0; grep -q ' 200 '; } 0<>/dev/tcp/127.0.0.1/8080"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+    restart: unless-stopped

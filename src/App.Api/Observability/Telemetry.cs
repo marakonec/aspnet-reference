@@ -27,11 +27,14 @@ public static class Telemetry
             .ConfigureResource(r => r.AddService(ServiceName))
             .WithTracing(t => t
                 .AddSource(ServiceName)
+                .AddSource("Npgsql")
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation())
             .WithMetrics(m => m
                 .AddAspNetCoreInstrumentation()
-                .AddHttpClientInstrumentation());
+                .AddHttpClientInstrumentation()
+                .AddMeter(ServiceName)
+                .AddMeter("Npgsql"));
 
         builder.Services.AddOpenTelemetry().UseOtlpExporter();
     }

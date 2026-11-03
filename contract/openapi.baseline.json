@@ -34,6 +34,82 @@
         }
       }
     },
+    "/models/{id}/title": {
+      "put": {
+        "tags": [
+          "App.Api"
+        ],
+        "summary": "Змінити назву моделі в каталозі (ідемпотентна операція)",
+        "operationId": "RenameModel",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenameModelRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstrumentModelDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/models/{id}/availability": {
       "get": {
         "tags": [
@@ -72,7 +148,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       }
     },
     "/reservations": {
@@ -96,13 +177,18 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       },
       "post": {
         "tags": [
           "App.Api"
         ],
-        "summary": "Створити бронювання",
+        "summary": "Створити бронювання. Замовник створює його від власного імені, оператор вказує замовника",
         "operationId": "CreateReservation",
         "requestBody": {
           "content": {
@@ -134,8 +220,23 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       }
     },
     "/reservations/{id}": {
@@ -166,6 +267,16 @@
               }
             }
           },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not Found",
             "content": {
@@ -176,7 +287,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       }
     },
     "/reservations/{id}/notes": {
@@ -227,6 +343,16 @@
               }
             }
           },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not Found",
             "content": {
@@ -237,7 +363,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       }
     },
     "/reservations/{id}/issue": {
@@ -257,16 +388,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/IssueRequest"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "description": "OK",
@@ -278,12 +399,12 @@
               }
             }
           },
-          "400": {
-            "description": "Bad Request",
+          "403": {
+            "description": "Forbidden",
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -307,8 +428,33 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       }
     }
   },
@@ -322,8 +468,7 @@
         "type": "object",
         "properties": {
           "modelId": {
-            "type": "string",
-            "description": "Ідентифікатор моделі."
+            "type": "string"
           },
           "availableCount": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -331,11 +476,9 @@
               "integer",
               "string"
             ],
-            "description": "Кількість вільних екземплярів.",
             "format": "int32"
           }
-        },
-        "description": "Скільки екземплярів моделі вільні зараз."
+        }
       },
       "CreateReservationRequest": {
         "required": [
@@ -345,19 +488,20 @@
         "type": "object",
         "properties": {
           "customerId": {
-            "type": "string",
-            "description": "Ідентифікатор замовника."
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "items": {
             "minItems": 1,
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ReservationItemDto"
-            },
-            "description": "Щонайменше одна позиція."
+            }
           }
-        },
-        "description": "Запит на створення бронювання."
+        }
       },
       "HttpValidationProblemDetails": {
         "type": "object",
@@ -415,12 +559,10 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string",
-            "description": "Стабільний ідентифікатор моделі."
+            "type": "string"
           },
           "title": {
-            "type": "string",
-            "description": "Назва моделі для людини."
+            "type": "string"
           },
           "totalCount": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -428,25 +570,9 @@
               "integer",
               "string"
             ],
-            "description": "Скільки екземплярів є всього.",
             "format": "int32"
           }
-        },
-        "description": "Модель приладу в каталозі."
-      },
-      "IssueRequest": {
-        "required": [
-          "issuedBy"
-        ],
-        "type": "object",
-        "properties": {
-          "issuedBy": {
-            "minLength": 2,
-            "type": "string",
-            "description": "Хто видає прилади."
-          }
-        },
-        "description": "Запит на видачу приладів за бронюванням (ключова операція)."
+        }
       },
       "IssueResultDto": {
         "required": [
@@ -457,19 +583,15 @@
         "type": "object",
         "properties": {
           "reservationId": {
-            "type": "string",
-            "description": "Бронювання, за яким видано."
+            "type": "string"
           },
           "status": {
-            "type": "string",
-            "description": "Новий стан бронювання."
+            "type": "string"
           },
           "issueRecordId": {
-            "type": "string",
-            "description": "Створений запис видачі."
+            "type": "string"
           }
-        },
-        "description": "Результат видачі."
+        }
       },
       "ProblemDetails": {
         "type": "object",
@@ -509,6 +631,19 @@
           }
         }
       },
+      "RenameModelRequest": {
+        "required": [
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "maxLength": 80,
+            "minLength": 2,
+            "type": "string"
+          }
+        }
+      },
       "ReservationDto": {
         "required": [
           "id",
@@ -520,33 +655,27 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string",
-            "description": "Ідентифікатор бронювання."
+            "type": "string"
           },
           "customerId": {
-            "type": "string",
-            "description": "Ідентифікатор замовника."
+            "type": "string"
           },
           "status": {
-            "type": "string",
-            "description": "Стан бронювання."
+            "type": "string"
           },
           "notes": {
             "type": [
               "null",
               "string"
-            ],
-            "description": "Довільна примітка."
+            ]
           },
           "items": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ReservationItemDto"
-            },
-            "description": "Позиції бронювання."
+            }
           }
-        },
-        "description": "Бронювання."
+        }
       },
       "ReservationItemDto": {
         "required": [
@@ -556,8 +685,7 @@
         "type": "object",
         "properties": {
           "modelId": {
-            "type": "string",
-            "description": "Ідентифікатор моделі приладу."
+            "type": "string"
           },
           "count": {
             "maximum": 10,
@@ -567,11 +695,9 @@
               "integer",
               "string"
             ],
-            "description": "Кількість екземплярів, додатне число.",
             "format": "int32"
           }
-        },
-        "description": "Позиція бронювання."
+        }
       },
       "SetNotesRequest": {
         "required": [
@@ -581,11 +707,16 @@
         "properties": {
           "notes": {
             "maxLength": 200,
-            "type": "string",
-            "description": "Текст примітки. Порожній рядок очищає її."
+            "type": "string"
           }
-        },
-        "description": "Запит на встановлення примітки. Ідемпотентна операція."
+        }
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     }
   },
