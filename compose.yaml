@@ -1,0 +1,34 @@
+name: app
+
+services:
+
+  dash:
+    image: ${APP_IMG_DASHBOARD}
+    container_name: app-dash
+    profiles: [dash]
+    environment:
+      ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
+    ports:
+      - "${APP_PORT_DASH_UI}:18888"
+      - "${APP_PORT_DASH_OTLP_GRPC}:18889"
+      - "${APP_PORT_DASH_OTLP_HTTP}:18890"
+    restart: unless-stopped
+
+  spectral:
+    image: ${APP_IMG_SPECTRAL}
+    profiles: [tools]
+    environment:
+      DO_NOT_TRACK: "1"
+    volumes:
+      - ./contract:/work:ro
+    working_dir: /work
+    entrypoint: ["spectral"]
+    command: ["lint", "--ruleset", ".spectral.yaml", "openapi.current.json"]
+
+  oasdiff:
+    image: ${APP_IMG_OASDIFF}
+    profiles: [tools]
+    volumes:
+      - ./contract:/specs:ro
+    working_dir: /specs
+    command: ["breaking", "--fail-on", "ERR", "openapi.baseline.json", "openapi.current.json"]
