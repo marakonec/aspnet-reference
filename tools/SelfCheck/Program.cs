@@ -40,8 +40,20 @@ var context = new Context(http, report, config, repoRoot);
 Console.WriteLine($"Самоперевірка · стан {stage} · {baseUrl}");
 Console.WriteLine(new string('─', 6));
 
+string? token = null;
+var tokenReason = "токен потрібен із третього стану";
+if (stage >= 3)
+{
+    (token, tokenReason) = await Probe.TokenAsync(config.Access, config.Access?.PrivilegedUser);
+    if (token is not null)
+        http.DefaultRequestHeaders.Authorization = new("Bearer", token);
+}
+
 await Stage0.RunAsync(context);
 if (stage >= 1) await Stage1.RunAsync(context);
+if (stage >= 2) await Stage2.RunAsync(context, token);
+if (stage >= 3) await Stage3.RunAsync(context, token, tokenReason);
+if (stage >= 4) await Stage4.RunAsync(context);
 
 return report.Summary();
 

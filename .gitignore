@@ -5,3 +5,6 @@ obj/
 artifacts/
 .env
 contract/openapi.current.json
+scripts/.out/
+demo/D4/tokens.generated.http
+TestResults/

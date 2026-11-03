@@ -14,6 +14,62 @@ services:
       - "${APP_PORT_DASH_OTLP_HTTP}:18890"
     restart: unless-stopped
 
+  db:
+    image: ${APP_IMG_DB}
+    container_name: app-db
+    profiles: [db]
+    environment:
+      POSTGRES_DB: ${APP_DB_NAME}
+      POSTGRES_USER: ${APP_DB_USER}
+      POSTGRES_PASSWORD: ${APP_DB_PASSWORD}
+    ports:
+      - "${APP_PORT_DB}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${APP_DB_USER} -d ${APP_DB_NAME}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  notifier:
+    build:
+      context: .
+      dockerfile: src/App.Notifier/Dockerfile
+    image: app-notifier:local
+    container_name: app-notifier
+    profiles: [dep]
+    environment:
+      ASPNETCORE_HTTP_PORTS: "8080"
+      Notifier__DelayMs: "0"
+      Notifier__FailRate: "0"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://dash:18889"
+    ports:
+      - "${APP_PORT_NOTIFIER}:8080"
+    restart: unless-stopped
+
+  idp:
+    image: ${APP_IMG_IDP}
+    container_name: app-idp
+    profiles: [idp]
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${APP_IDP_ADMIN}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${APP_IDP_ADMIN_PASSWORD}
+      KC_HEALTH_ENABLED: "true"
+    volumes:
+      - ./infra/keycloak/app-realm.json:/opt/keycloak/data/import/app-realm.json:ro
+      - ./infra/keycloak/foreign-realm.json:/opt/keycloak/data/import/foreign-realm.json:ro
+    ports:
+      - "${APP_PORT_IDP}:8080"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "{ printf 'HEAD /health/ready HTTP/1.0\\r\\n\\r\\n' >&0; grep -q 'HTTP/1.0 200'; } 0<>/dev/tcp/127.0.0.1/9000"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+
   spectral:
     image: ${APP_IMG_SPECTRAL}
     profiles: [tools]
@@ -24,6 +80,12 @@ services:
     working_dir: /work
     entrypoint: ["spectral"]
     command: ["lint", "--ruleset", ".spectral.yaml", "openapi.current.json"]
+
+  k6:
+    image: ${APP_IMG_K6}
+    profiles: [tools]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   oasdiff:
     image: ${APP_IMG_OASDIFF}

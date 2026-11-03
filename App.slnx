@@ -1,7 +1,12 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/App.Api/App.Api.csproj" />
+    <Project Path="src/App.Notifier/App.Notifier.csproj" />
     <Project Path="src/App.Shared/App.Shared.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/App.Tests.Containers/App.Tests.Containers.csproj" />
+    <Project Path="tests/App.Tests.InMemory/App.Tests.InMemory.csproj" />
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/SelfCheck/SelfCheck.csproj" />

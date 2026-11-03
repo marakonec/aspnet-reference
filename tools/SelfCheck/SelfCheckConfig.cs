@@ -29,6 +29,13 @@ public sealed class SelfCheckConfig
     [JsonPropertyName("unknownResource")]
     public string? UnknownResource { get; set; }
 
+
+    [JsonPropertyName("rateLimitBurst")]
+    public int? RateLimitBurst { get; set; }
+
+    [JsonPropertyName("access")]
+    public AccessPassport? Access { get; set; }
+
     [JsonPropertyName("artifacts")]
     public Dictionary<string, string> Artifacts { get; set; } = [];
 
@@ -36,6 +43,27 @@ public sealed class SelfCheckConfig
     {
         [JsonPropertyName("method")] public string Method { get; set; } = "GET";
         [JsonPropertyName("path")] public string Path { get; set; } = "/";
+    }
+
+    public sealed class AccessPassport
+    {
+        [JsonPropertyName("tokenEndpoint")] public string? TokenEndpoint { get; set; }
+        [JsonPropertyName("clientId")] public string? ClientId { get; set; }
+
+        [JsonPropertyName("privilegedUser")] public PassportUser? PrivilegedUser { get; set; }
+
+        [JsonPropertyName("ownerUser")] public PassportUser? OwnerUser { get; set; }
+
+        [JsonPropertyName("ownResource")] public string? OwnResource { get; set; }
+
+        [JsonPropertyName("foreignResource")] public string? ForeignResource { get; set; }
+    }
+
+    public sealed class PassportUser
+    {
+        [JsonPropertyName("username")] public string? Username { get; set; }
+
+        [JsonPropertyName("passwordEnv")] public string? PasswordEnv { get; set; }
     }
 
     public static SelfCheckConfig Load(string repoRoot)

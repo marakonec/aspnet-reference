@@ -12,11 +12,13 @@ public enum ReservationStatus
 public sealed class InstrumentModel
 {
     public required string Id { get; init; }
-    public required string Title { get; init; }
+    public required string Title { get; set; }
 
     public required int TotalCount { get; init; }
 
     public int AvailableCount { get; set; }
+
+    public int Version { get; set; }
 }
 
 public sealed class Instrument
@@ -36,6 +38,9 @@ public sealed class Customer
 
 public sealed class ReservationItem
 {
+    public int Id { get; set; }
+
+    public required string ReservationId { get; set; }
     public required string ModelId { get; init; }
     public required int Count { get; init; }
 }
@@ -46,7 +51,7 @@ public sealed class Reservation
     public required string CustomerId { get; init; }
     public ReservationStatus Status { get; set; } = ReservationStatus.Reserved;
     public string? Notes { get; set; }
-    public required List<ReservationItem> Items { get; init; }
+    public List<ReservationItem> Items { get; init; } = [];
 }
 
 public sealed class IssueRecord

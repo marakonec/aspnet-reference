@@ -9,6 +9,15 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
+    "App.Api (memory)": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:15100",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "Features__Persistence": "memory"
+      }
+    },
     "App.Api (Production)": {
       "commandName": "Project",
       "launchBrowser": false,
