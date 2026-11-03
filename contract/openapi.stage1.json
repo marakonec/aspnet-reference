@@ -1,0 +1,597 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "App.Api | v1",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:15100/"
+    }
+  ],
+  "paths": {
+    "/models": {
+      "get": {
+        "tags": [
+          "App.Api"
+        ],
+        "summary": "Каталог моделей приладів",
+        "operationId": "ListModels",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InstrumentModelDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/models/{id}/availability": {
+      "get": {
+        "tags": [
+          "App.Api"
+        ],
+        "summary": "Кількість вільних екземплярів моделі",
+        "operationId": "GetAvailability",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvailabilityDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reservations": {
+      "get": {
+        "tags": [
+          "App.Api"
+        ],
+        "summary": "Перелік бронювань",
+        "operationId": "ListReservations",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReservationDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "App.Api"
+        ],
+        "summary": "Створити бронювання",
+        "operationId": "CreateReservation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReservationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reservations/{id}": {
+      "get": {
+        "tags": [
+          "App.Api"
+        ],
+        "summary": "Одне бронювання",
+        "operationId": "GetReservation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reservations/{id}/notes": {
+      "put": {
+        "tags": [
+          "App.Api"
+        ],
+        "summary": "Встановити примітку до бронювання (ідемпотентна операція)",
+        "operationId": "SetReservationNotes",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetNotesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reservations/{id}/issue": {
+      "post": {
+        "tags": [
+          "App.Api"
+        ],
+        "summary": "Видати прилади за бронюванням (ключова операція)",
+        "operationId": "IssueReservation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AvailabilityDto": {
+        "required": [
+          "modelId",
+          "availableCount"
+        ],
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "description": "Ідентифікатор моделі."
+          },
+          "availableCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Кількість вільних екземплярів.",
+            "format": "int32"
+          }
+        },
+        "description": "Скільки екземплярів моделі вільні зараз."
+      },
+      "CreateReservationRequest": {
+        "required": [
+          "customerId",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string",
+            "description": "Ідентифікатор замовника."
+          },
+          "items": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReservationItemDto"
+            },
+            "description": "Щонайменше одна позиція."
+          }
+        },
+        "description": "Запит на створення бронювання."
+      },
+      "HttpValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "InstrumentModelDto": {
+        "required": [
+          "id",
+          "title",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Стабільний ідентифікатор моделі."
+          },
+          "title": {
+            "type": "string",
+            "description": "Назва моделі для людини."
+          },
+          "totalCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Скільки екземплярів є всього.",
+            "format": "int32"
+          }
+        },
+        "description": "Типи контракту — окремо від типів домену."
+      },
+      "IssueRequest": {
+        "required": [
+          "issuedBy"
+        ],
+        "type": "object",
+        "properties": {
+          "issuedBy": {
+            "minLength": 2,
+            "type": "string",
+            "description": "Хто видає. У стані 3 це поле зникне: відповідь\r\n    на це питання дає токен, а не тіло запиту."
+          }
+        },
+        "description": "Запит на видачу приладів за бронюванням (ключова операція)."
+      },
+      "IssueResultDto": {
+        "required": [
+          "reservationId",
+          "status",
+          "issueRecordId"
+        ],
+        "type": "object",
+        "properties": {
+          "reservationId": {
+            "type": "string",
+            "description": "Бронювання, за яким видано."
+          },
+          "status": {
+            "type": "string",
+            "description": "Новий стан бронювання."
+          },
+          "issueRecordId": {
+            "type": "string",
+            "description": "Створений запис видачі."
+          }
+        },
+        "description": "Результат видачі."
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ReservationDto": {
+        "required": [
+          "id",
+          "customerId",
+          "status",
+          "notes",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Ідентифікатор бронювання."
+          },
+          "customerId": {
+            "type": "string",
+            "description": "Ідентифікатор замовника."
+          },
+          "status": {
+            "type": "string",
+            "description": "Стан бронювання."
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Довільна примітка."
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReservationItemDto"
+            },
+            "description": "Позиції бронювання."
+          }
+        },
+        "description": "Бронювання."
+      },
+      "ReservationItemDto": {
+        "required": [
+          "modelId",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "description": "Ідентифікатор моделі приладу."
+          },
+          "count": {
+            "maximum": 10,
+            "minimum": 1,
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Кількість екземплярів; додатне число.",
+            "format": "int32"
+          }
+        },
+        "description": "Позиція бронювання."
+      },
+      "SetNotesRequest": {
+        "required": [
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "notes": {
+            "maxLength": 200,
+            "type": "string",
+            "description": "Текст примітки; порожній рядок очищає її."
+          }
+        },
+        "description": "Запит на встановлення примітки. Ідемпотентна операція."
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "App.Api"
+    }
+  ]
+}
