@@ -1,0 +1,34 @@
+extends: ["spectral:oas"]
+
+rules:
+  api-plural-resources:
+    description: A collection whose item is addressed by a parameter is named in plural
+    message: "Path {{property}}: collection is named in singular"
+    severity: error
+    given: $.paths
+    then:
+      field: "@key"
+      function: pattern
+      functionOptions:
+        # Незлічувані іменники (equipment, stock тощо) множини не мають.
+        notMatch: "/\\/(?!(?:equipment|stock|staff|inventory|information|software|hardware|data|metadata|media|news|feedback|research|music|furniture|baggage|luggage|personnel)\\/)[a-z][a-z0-9-]*(?<!s)\\/\\{/"
+
+  api-no-verbs-in-path:
+    description: A path segment does not start with an operation verb, the HTTP method sets the action
+    message: "Path {{property}}: segment starts with an operation verb"
+    severity: error
+    given: $.paths
+    then:
+      field: "@key"
+      function: pattern
+      functionOptions:
+        notMatch: "/\\/(get|post|put|patch|create|update|delete|remove|fetch|list|add|set)([A-Z_-][A-Za-z0-9_-]*)?(\\/|$)/"
+
+  api-problem-details-for-errors:
+    description: Error responses are described as problem details
+    message: "Error response is not described as application/problem+json"
+    severity: error
+    given: $.paths[*][get,put,post,delete,patch].responses[?(@property.match(/^[45]/))].content
+    then:
+      field: "application/problem+json"
+      function: truthy

@@ -1,0 +1,52 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Прокат приладів, зіпсована копія контракту",
+    "version": "1.0.0",
+    "description": "Три порушення, по одному на кожне правило курсу: дієслово у шляху, іменник в однині, помилка описана не форматом опису проблеми. Файл показує, як спрацьовує кожне правило лінтера."
+  },
+  "paths": {
+    "/getReservations": {
+      "get": {
+        "summary": "Порушення 1: дієслово у шляху (api-no-verbs-in-path)",
+        "responses": {
+          "200": { "description": "Перелік бронювань" },
+          "400": { "description": "Неправильний запит" }
+        }
+      }
+    },
+    "/reservation/{id}": {
+      "get": {
+        "summary": "Порушення 2: іменник в однині (api-plural-resources)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Бронювання" },
+          "404": { "description": "Не знайдено" }
+        }
+      }
+    },
+    "/models": {
+      "get": {
+        "summary": "Порушення 3: помилка описана не форматом опису проблеми (api-problem-details-for-errors)",
+        "responses": {
+          "200": { "description": "Каталог моделей" },
+          "503": {
+            "description": "Каталог тимчасово недоступний",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

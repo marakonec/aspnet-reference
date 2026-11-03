@@ -1,0 +1,22 @@
+{
+  "baseUrl": "http://localhost:15100",
+
+  "keyOperation": { "method": "POST", "path": "/reservations/{id}/issue" },
+  "keyOperationBody": { "issuedBy": "operator-1" },
+
+  "cacheableResource": "/models",
+  "volatileResource": "/models/mdl-gen/availability",
+
+  "invalidBodyTarget": { "method": "POST", "path": "/reservations/res-1/issue" },
+  "invalidBody": { "issuedBy": "" },
+
+  "unknownResource": "/models/no-such-model/availability",
+
+  "artifacts": {
+    "readme": "README.md",
+    "domain": "docs/DOMAIN.md",
+    "contract": "contract/openapi.baseline.json",
+    "adr1": "docs/adr/ADR-001.md",
+    "attribution": "docs/ATTRIBUTION.md"
+  }
+}
