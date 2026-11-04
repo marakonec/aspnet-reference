@@ -42,7 +42,9 @@ if (switches.UsesDatabase)
     // Рядок підключення читається під час створення контексту, бо тестовий хост
     // підміняє його після складання служб.
     builder.Services.AddDbContext<AppDbContext>((sp, options) =>
-        options.UseNpgsql(sp.GetRequiredService<IConfiguration>().GetConnectionString("Default")));
+        options.UseNpgsql(sp.GetRequiredService<IConfiguration>().GetConnectionString("Default"))
+            .UseSeeding(SeedData.Seed)
+            .UseAsyncSeeding(SeedData.SeedAsync));
     builder.Services.AddScoped<IRentalStore, DatabaseRentalStore>();
 }
 else
@@ -65,8 +67,6 @@ if (switches.UsesDatabase)
     await db.Database.MigrateAsync();
     app.Logger.LogInformation("{Event} provider={Provider}",
         AppEvents.MigrationsApplied, db.Database.ProviderName);
-
-    await SeedData.EnsureSeededAsync(db, app.Logger);
 }
 
 app.UseExceptionHandler(handler => handler.Run(async context =>
@@ -95,9 +95,9 @@ app.Use(async (context, next) =>
         AppEvents.PipelineExit, context.Response.StatusCode, context.Request.Path);
 });
 
-// Обробники автентифікації й авторизації додано явно після рядка логу конвеєра.
-// Без цих рядків платформа поставила б їх раніше, і відхилений запит не лишав би
-// в лозі рядків входу і виходу.
+// Обробники автентифікації й авторизації додано явно після записів журналу на вході
+// і виході конвеєра. Без цих рядків платформа поставила б їх раніше, і відхилений
+// запит не лишав би в журналі записів входу і виходу.
 app.UseAuthentication();
 app.UseAuthorization();
 

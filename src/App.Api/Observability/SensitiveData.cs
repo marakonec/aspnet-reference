@@ -2,7 +2,7 @@ namespace App.Api.Observability;
 
 public static class SensitiveData
 {
-    // У лог потрапляють лише перші чотири і дві останні цифри телефону.
+    // У журнал потрапляють лише перші чотири і дві останні цифри телефону.
     public static string Phone(string? phone)
     {
         if (string.IsNullOrEmpty(phone)) return "-";

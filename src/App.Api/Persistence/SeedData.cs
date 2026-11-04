@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using App.Api.Domain;
 using App.Shared;
 
@@ -17,15 +18,49 @@ public static class SeedData
             ["mdl-lcr"] = "Вимірювач RLC"
         };
 
-    public static async Task EnsureSeededAsync(
-        AppDbContext db, ILogger logger, CancellationToken ct = default)
+    // Синхронний варіант викликають інструменти EF Core (dotnet ef database update),
+    // асинхронний викликає MigrateAsync під час старту застосунку.
+    public static void Seed(DbContext context, bool storeManagementPerformed)
     {
-        if (await db.Models.AnyAsync(ct))
+        var db = (AppDbContext)context;
+        if (db.Models.Any())
         {
-            logger.LogInformation("{Event} seeded=skipped", AppEvents.DatabaseSeeded);
+            Log(db, skipped: true);
             return;
         }
 
+        AddInitialData(db);
+        db.SaveChanges();
+        Log(db, skipped: false);
+    }
+
+    public static async Task SeedAsync(
+        DbContext context, bool storeManagementPerformed, CancellationToken ct)
+    {
+        var db = (AppDbContext)context;
+        if (await db.Models.AnyAsync(ct))
+        {
+            Log(db, skipped: true);
+            return;
+        }
+
+        AddInitialData(db);
+        await db.SaveChangesAsync(ct);
+        Log(db, skipped: false);
+    }
+
+    private static void Log(AppDbContext db, bool skipped)
+    {
+        var logger = db.GetService<ILoggerFactory>().CreateLogger(typeof(SeedData));
+        if (skipped)
+            logger.LogInformation("{Event} seeded=skipped", AppEvents.DatabaseSeeded);
+        else
+            logger.LogInformation("{Event} reservations={Count}",
+                AppEvents.DatabaseSeeded, SeedReservations);
+    }
+
+    private static void AddInitialData(AppDbContext db)
+    {
         db.Models.AddRange(
             new InstrumentModel { Id = "mdl-osc", Title = ModelTitles["mdl-osc"], TotalCount = 3, AvailableCount = 3 },
             new InstrumentModel { Id = "mdl-mm",  Title = ModelTitles["mdl-mm"], TotalCount = 5, AvailableCount = 5 },
@@ -68,10 +103,5 @@ public static class SeedData
                 }]
             });
         }
-
-        await db.SaveChangesAsync(ct);
-
-        logger.LogInformation("{Event} reservations={Count}",
-            AppEvents.DatabaseSeeded, SeedReservations);
     }
 }

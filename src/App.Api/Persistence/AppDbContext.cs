@@ -28,7 +28,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             e.Property(x => x.TotalCount);
             e.Property(x => x.AvailableCount);
 
-            // Токен паралельності: оновлення, що прочитало стару версію, отримує
+            // Токен конкурентності. Оновлення, що прочитало стару версію, отримує
             // DbUpdateConcurrencyException замість тихого перезапису.
             e.Property(x => x.Version).IsConcurrencyToken();
         });
