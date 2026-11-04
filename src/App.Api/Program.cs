@@ -32,8 +32,8 @@ app.UseExceptionHandler(handler => handler.Run(async context =>
         .ExecuteAsync(context);
 }));
 
-// Рядки входу і виходу пишуться з тим самим ідентифікатором трасування,
-// тому за ним у лозі видно весь шлях запиту крізь конвеєр.
+// Записи журналу на вході і виході пишуться з тим самим ідентифікатором трасування,
+// тому за ним у журналі видно весь шлях запиту крізь конвеєр.
 app.Use(async (context, next) =>
 {
     var log = context.RequestServices.GetRequiredService<ILogger<Program>>();
