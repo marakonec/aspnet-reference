@@ -27,6 +27,11 @@ function Get-Median([double[]]$Values) {
     return ($sorted[$n / 2 - 1] + $sorted[$n / 2]) / 2
 }
 
+# Округлення через decimal, бо формат F2 для double у PowerShell 5.1 і 7 по-різному округлює другу цифру після коми.
+function Round2([double]$Value) {
+    return [Math]::Round([decimal]$Value, 2, [MidpointRounding]::AwayFromZero)
+}
+
 function Get-Series([string]$Path) {
     $rows = @(Import-Csv $Path | Where-Object { $_.warmup -eq 'false' })
     if ($rows.Count -eq 0) { throw "У файлі $Path немає зарахованих прогонів" }
@@ -41,14 +46,14 @@ if ($Compare) {
     $a = Get-Series $Compare[0]
     $b = Get-Series $Compare[1]
     foreach ($s in @($a, $b)) {
-        Write-Host ([string]::Format($culture, '{0}: прогонів {1}, медіана M = {2:F2} мс, розмах R = {3:F2} мс', $s.Path, $s.Count, $s.M, $s.R))
+        Write-Host ([string]::Format($culture, '{0}: прогонів {1}, медіана M = {2:F2} мс, розмах R = {3:F2} мс', $s.Path, $s.Count, (Round2 $s.M), (Round2 $s.R)))
     }
     $difference = [Math]::Abs($a.M - $b.M)
     $limit = [Math]::Max($a.R, $b.R)
     if ($difference -gt $limit) {
-        Write-Mark -Status OK -Id 'compare' -Text ([string]::Format($culture, '|M(A) - M(B)| = {0:F2} мс більше за max(R(A), R(B)) = {1:F2} мс, варіанти відрізняються', $difference, $limit))
+        Write-Mark -Status OK -Id 'compare' -Text ([string]::Format($culture, '|M(A) - M(B)| = {0:F2} мс більше за max(R(A), R(B)) = {1:F2} мс, варіанти відрізняються', (Round2 $difference), (Round2 $limit)))
     } else {
-        Write-Mark -Status INFO -Id 'compare' -Text ([string]::Format($culture, '|M(A) - M(B)| = {0:F2} мс не більше за max(R(A), R(B)) = {1:F2} мс, різницю не доведено', $difference, $limit))
+        Write-Mark -Status INFO -Id 'compare' -Text ([string]::Format($culture, '|M(A) - M(B)| = {0:F2} мс не більше за max(R(A), R(B)) = {1:F2} мс, різницю не доведено', (Round2 $difference), (Round2 $limit)))
     }
     exit 0
 }
@@ -115,4 +120,4 @@ try {
 
 [System.IO.File]::WriteAllLines($csvPath, $lines, (New-Object System.Text.UTF8Encoding $false))
 $series = Get-Series $csvPath
-Write-Mark -Status OK -Id 'k6' -Text ([string]::Format($culture, 'Серію записано у {0}, зарахованих прогонів {1}, M = {2:F2} мс, R = {3:F2} мс', $Csv, $series.Count, $series.M, $series.R))
+Write-Mark -Status OK -Id 'k6' -Text ([string]::Format($culture, 'Серію записано у {0}, зарахованих прогонів {1}, M = {2:F2} мс, R = {3:F2} мс', $Csv, $series.Count, (Round2 $series.M), (Round2 $series.R)))
