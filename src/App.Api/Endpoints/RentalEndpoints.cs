@@ -54,6 +54,7 @@ public static class RentalEndpoints
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
             .RequireAuthorization();
 
         app.MapGet("/models/{id}/availability",
@@ -68,6 +69,7 @@ public static class RentalEndpoints
             .WithName("GetAvailability")
             .WithSummary("Кількість вільних екземплярів моделі")
             .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
             .RequireAuthorization();
 
         app.MapGet("/reservations", async Task<Ok<IEnumerable<ReservationDto>>> (
@@ -75,6 +77,7 @@ public static class RentalEndpoints
                 TypedResults.Ok((await store.GetReservationsAsync(access.VisibleOwner(user))).Select(ToDto)))
             .WithName("ListReservations")
             .WithSummary("Перелік бронювань")
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
             .RequireAuthorization();
 
         app.MapGet("/reservations/{id}",
@@ -97,6 +100,7 @@ public static class RentalEndpoints
             .WithSummary("Одне бронювання")
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
             .RequireAuthorization();
 
         app.MapPost("/reservations",
@@ -126,6 +130,7 @@ public static class RentalEndpoints
             .WithSummary("Створити бронювання. Замовник створює його від власного імені, оператор вказує замовника")
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
             .RequireAuthorization();
 
         app.MapPut("/reservations/{id}/notes",
@@ -153,6 +158,7 @@ public static class RentalEndpoints
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
             .RequireAuthorization();
 
         app.MapPost("/reservations/{id}/issue",
@@ -238,6 +244,7 @@ public static class RentalEndpoints
             .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesProblem(StatusCodes.Status429TooManyRequests)
             .ProducesProblem(StatusCodes.Status503ServiceUnavailable)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
             .RequireAuthorization()
             .RequireRateLimiting(LoadProtectionSetup.IssuePolicy);
 

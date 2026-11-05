@@ -41,7 +41,8 @@ public static partial class Stage4
 
         var dockerfile = AppDockerfile(ctx);
         if (dockerfile is null)
-            report.Fail("4.3", "Не знайдено Dockerfile застосунку. Він має бути єдиним у репозиторії або названим у робочому процесі конвеєра");
+            report.Fail("4.3", "Не знайдено Dockerfile застосунку (Dockerfile заглушки src/App.Notifier " +
+                               "не враховується). Він має бути єдиним або названим у робочому процесі конвеєра");
         else
         {
             var lines = File.ReadAllLines(dockerfile).Select(l => l.Trim()).ToList();
@@ -65,7 +66,7 @@ public static partial class Stage4
             if (!build && waits)
                 report.Ok("4.4", "compose.deploy.yaml: образ із реєстру, застосунок чекає готовності бази");
             else
-                report.Fail("4.4", $"compose.deploy.yaml: {(build ? "є ключ build:, образ збирається локально" : "")}" +
+                report.Fail("4.4", $"compose.deploy.yaml: {(build ? "є ключ build:, образ складається локально" : "")}" +
                                    $"{(!waits ? " немає condition: service_healthy" : "")}".Trim());
         }
 
@@ -74,8 +75,12 @@ public static partial class Stage4
 
     private static string? AppDockerfile(Context ctx)
     {
+        // Dockerfile заглушки зовнішньої залежності переноситься з еталона в роботі 2
+        // і не є образом застосунку студента.
+        var stub = Path.Combine(ctx.RepoRoot, "src", "App.Notifier") + Path.DirectorySeparatorChar;
         var all = Directory.EnumerateFiles(ctx.RepoRoot, "Dockerfile", SearchOption.AllDirectories)
             .Where(p => !Stage2.IsBuildOutput(p))
+            .Where(p => !p.StartsWith(stub, StringComparison.OrdinalIgnoreCase))
             .ToList();
         var folder = Path.Combine(ctx.RepoRoot, ".github", "workflows");
         if (Directory.Exists(folder))
@@ -90,7 +95,7 @@ public static partial class Stage4
 
     private static readonly (string Step, string[] Evidence)[] Steps =
     [
-        ("збирання", ["dotnet build"]),
+        ("складання", ["dotnet build"]),
         ("тести", ["dotnet test"]),
         ("лінтер контракту", ["spectral"]),
         ("порівняння контрактів", ["oasdiff"]),

@@ -47,6 +47,20 @@ public sealed class IssueTests(TestHost host) : IClassFixture<TestHost>
     }
 
     [Fact]
+    public async Task Broken_json_body_gives_bad_request_problem()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        using var client = host.ClientFor(TestUsers.CustomerOfRes2);
+        using var body = new StringContent(
+            "{ \"items\": ", System.Text.Encoding.UTF8, "application/json");
+
+        using var response = await client.PostAsync("/reservations", body, ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
     public async Task Customer_lists_only_own_reservations()
     {
         var ct = TestContext.Current.CancellationToken;

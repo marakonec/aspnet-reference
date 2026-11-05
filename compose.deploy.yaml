@@ -30,6 +30,11 @@ services:
       Features__Persistence: postgres
       # Сервер ідентичності локальної машини працює за HTTP. Послаблення записано в рядку A02 чекліста OWASP.
       Auth__RequireHttpsMetadata: "false"
+      # Адреса localhost із контейнера веде в сам контейнер. Видавця в токені застосунок
+      # і далі звіряє з Auth:Authority, а ключі підпису читає через host.docker.internal.
+      Authentication__Schemes__Bearer__MetadataAddress: "http://host.docker.internal:${APP_PORT_IDP}/realms/app/.well-known/openid-configuration"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "${APP_PORT_DEPLOY_API}:8080"
     healthcheck:

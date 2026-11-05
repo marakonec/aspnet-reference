@@ -105,7 +105,7 @@ docker compose -f compose.deploy.yaml up -d --wait
 | Файл | Що в ньому |
 |---|---|
 | `global.json` | версія пакета розробника |
-| `Directory.Build.props` | цільова платформа і налаштування збирання |
+| `Directory.Build.props` | цільова платформа і налаштування складання |
 | `Directory.Packages.props` | версії пакетів NuGet |
 | `dotnet-tools.json` | версія `dotnet-ef` |
 | `.env.example` | теги образів контейнерів і порти |
