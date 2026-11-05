@@ -13,6 +13,11 @@ builder.AddAppTelemetry();
 builder.Services.AddOpenApi();
 builder.Services.AddValidation();
 builder.Services.AddProblemDetails(ProblemDetailsSetup.Configure);
+builder.Services.AddExceptionHandler<BadRequestBodyHandler>();
+
+// Без цього рядка зіпсоване тіло запиту доходить до обробника винятків лише в середовищі
+// розробки, а в інших середовищах дає відповідь 400 без опису проблеми.
+builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = true);
 
 builder.Services.AddSingleton<RentalStore>();
 

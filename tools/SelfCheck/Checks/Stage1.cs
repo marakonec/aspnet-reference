@@ -53,12 +53,25 @@ public static class Stage1
             var contentType = response.Content.Headers.ContentType?.MediaType ?? "";
             var hasFields = payload.Contains("\"errors\"", StringComparison.Ordinal);
 
-            if (response.StatusCode == HttpStatusCode.BadRequest
-                && contentType == "application/problem+json" && hasFields)
-                report.Ok("1.3", "Неправильне тіло: 400, опис проблеми, перелік полів");
-            else
+            using var broken = new HttpRequestMessage(
+                new HttpMethod(cfg.InvalidBodyTarget.Method), cfg.InvalidBodyTarget.Path)
+            {
+                Content = new StringContent("{ \"broken\": ", Encoding.UTF8, "application/json")
+            };
+            var brokenResponse = await ctx.Http.SendAsync(broken);
+            var brokenType = brokenResponse.Content.Headers.ContentType?.MediaType ?? "";
+
+            if (response.StatusCode != HttpStatusCode.BadRequest
+                || contentType != "application/problem+json" || !hasFields)
                 report.Fail("1.3", $"Очікували 400, application/problem+json і errors, " +
                                    $"отримали {(int)response.StatusCode} і {contentType}");
+            else if (brokenResponse.StatusCode != HttpStatusCode.BadRequest
+                     || brokenType != "application/problem+json")
+                report.Fail("1.3", "Зіпсований JSON: очікували 400 і application/problem+json, " +
+                                   $"отримали {(int)brokenResponse.StatusCode} і {brokenType}");
+            else
+                report.Ok("1.3", "Неправильне тіло: 400, опис проблеми, перелік полів. " +
+                                 "Зіпсований JSON: 400, опис проблеми");
         }
         else
         {
